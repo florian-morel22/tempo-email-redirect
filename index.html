@@ -76,8 +76,7 @@
         color: var(--error);
       }
       h1 { margin: 0 0 10px; font-size: 20px; font-weight: 600; }
-      p { margin: 0 0 8px; font-size: 15px; line-height: 1.55; color: var(--muted); }
-      p.secondary { margin: 0 0 24px; opacity: 0.7; font-size: 14px; }
+      p { margin: 0 0 24px; font-size: 15px; line-height: 1.55; color: var(--muted); }
       .btn {
         display: inline-block;
         margin-top: 16px;
@@ -100,14 +99,12 @@
         <div class="icon" aria-hidden="true">&#10003;</div>
         <h1 data-i18n="successTitle"></h1>
         <p data-i18n="successBody"></p>
-        <p class="secondary" data-i18n-other="successBody"></p>
       </div>
 
       <div id="error" hidden>
         <div class="icon error" aria-hidden="true">&#33;</div>
         <h1 data-i18n="errorTitle"></h1>
         <p data-i18n="errorBody"></p>
-        <p class="secondary" data-i18n-other="errorBody"></p>
       </div>
     </main>
 
@@ -132,18 +129,14 @@
           },
         };
 
-        var pref = (navigator.language || "en").toLowerCase();
-        var primary = pref.indexOf("fr") === 0 ? "fr" : "en";
-        var other = primary === "fr" ? "en" : "fr";
+        var pref = (navigator.language || "fr").toLowerCase();
+        var lang = pref.indexOf("fr") === 0 ? "fr" : "en";
 
-        document.documentElement.lang = STRINGS[primary].lang;
-        document.title = STRINGS[primary].title;
+        document.documentElement.lang = STRINGS[lang].lang;
+        document.title = STRINGS[lang].title;
 
         document.querySelectorAll("[data-i18n]").forEach(function (el) {
-          el.textContent = STRINGS[primary][el.getAttribute("data-i18n")];
-        });
-        document.querySelectorAll("[data-i18n-other]").forEach(function (el) {
-          el.textContent = STRINGS[other][el.getAttribute("data-i18n-other")];
+          el.textContent = STRINGS[lang][el.getAttribute("data-i18n")];
         });
 
         var params = new URLSearchParams(
