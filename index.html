@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="robots" content="noindex" />
+    <title>Tempo</title>
+    <style>
+      :root {
+        --bg: #f5f6fa;
+        --card: #ffffff;
+        --border: #e2e4ee;
+        --text: #12141a;
+        --muted: #4b4f58;
+        --brand: #3654ff;
+        --brand-contrast: #ffffff;
+        --success: #1f9d55;
+        --error: #d64545;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0e1016;
+          --card: #171a22;
+          --border: #262a35;
+          --text: #f3f4f8;
+          --muted: #9aa0ac;
+          --brand: #6b82ff;
+          --brand-contrast: #0e1016;
+          --success: #4ade80;
+          --error: #f87171;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      .card {
+        width: 420px;
+        max-width: 100%;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 40px 32px;
+        text-align: center;
+      }
+      .wordmark {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--brand);
+        margin-bottom: 28px;
+      }
+      .icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        background: color-mix(in srgb, var(--success) 15%, transparent);
+        color: var(--success);
+      }
+      .icon.error {
+        background: color-mix(in srgb, var(--error) 15%, transparent);
+        color: var(--error);
+      }
+      h1 { margin: 0 0 10px; font-size: 20px; font-weight: 600; }
+      p { margin: 0 0 8px; font-size: 15px; line-height: 1.55; color: var(--muted); }
+      p.secondary { margin: 0 0 24px; opacity: 0.7; font-size: 14px; }
+      .btn {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 13px 28px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+        background: var(--brand);
+        color: var(--brand-contrast);
+      }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="wordmark">tempo</div>
+
+      <div id="success">
+        <div class="icon" aria-hidden="true">&#10003;</div>
+        <h1 data-i18n="successTitle"></h1>
+        <p data-i18n="successBody"></p>
+        <p class="secondary" data-i18n-other="successBody"></p>
+      </div>
+
+      <div id="error" hidden>
+        <div class="icon error" aria-hidden="true">&#33;</div>
+        <h1 data-i18n="errorTitle"></h1>
+        <p data-i18n="errorBody"></p>
+        <p class="secondary" data-i18n-other="errorBody"></p>
+      </div>
+
+      <a class="btn" href="neworch://" data-i18n="openApp"></a>
+    </main>
+
+    <script>
+      (function () {
+        var STRINGS = {
+          fr: {
+            lang: "fr",
+            title: "Adresse e-mail confirmée — Tempo",
+            successTitle: "Adresse e-mail confirmée",
+            successBody: "Votre compte Tempo est activé. Vous pouvez retourner dans l'application et vous connecter.",
+            errorTitle: "Lien invalide ou expiré",
+            errorBody: "Ce lien de confirmation n'est plus valable. Ouvrez l'application et demandez un nouvel e-mail de confirmation.",
+            openApp: "Ouvrir Tempo",
+          },
+          en: {
+            lang: "en",
+            title: "Email confirmed — Tempo",
+            successTitle: "Email confirmed",
+            successBody: "Your Tempo account is active. You can go back to the app and sign in.",
+            errorTitle: "Invalid or expired link",
+            errorBody: "This confirmation link is no longer valid. Open the app and request a new confirmation email.",
+            openApp: "Open Tempo",
+          },
+        };
+
+        var pref = (navigator.language || "en").toLowerCase();
+        var primary = pref.indexOf("fr") === 0 ? "fr" : "en";
+        var other = primary === "fr" ? "en" : "fr";
+
+        document.documentElement.lang = STRINGS[primary].lang;
+        document.title = STRINGS[primary].title;
+
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          el.textContent = STRINGS[primary][el.getAttribute("data-i18n")];
+        });
+        document.querySelectorAll("[data-i18n-other]").forEach(function (el) {
+          el.textContent = STRINGS[other][el.getAttribute("data-i18n-other")];
+        });
+
+        var params = new URLSearchParams(
+          window.location.hash.replace(/^#/, "") + "&" + window.location.search.replace(/^\?/, "")
+        );
+        if (params.get("error") || params.get("error_code")) {
+          document.getElementById("success").hidden = true;
+          document.getElementById("error").hidden = false;
+        }
+
+        // Strip tokens from the URL so they aren't left in history / shoulder-surfed.
+        if (window.history.replaceState) {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+      })();
+    </script>
+  </body>
+</html>
