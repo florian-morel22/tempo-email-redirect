@@ -173,6 +173,7 @@
         var params = new URLSearchParams(
           window.location.hash.replace(/^#/, "") + "&" + window.location.search.replace(/^\?/, "")
         );
+        console.log("URL params:", Object.fromEntries(params.entries()));
         if (params.get("error") || params.get("error_code")) {
           document.getElementById("success").hidden = true;
           document.getElementById("error").hidden = false;
