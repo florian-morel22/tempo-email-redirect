@@ -91,6 +91,10 @@
         background: color-mix(in srgb, var(--error) 15%, transparent);
         color: var(--error);
       }
+      .icon.idle {
+        background: color-mix(in srgb, var(--muted) 15%, transparent);
+        color: var(--muted);
+      }
       h1 { margin: 0 0 10px; font-size: 20px; font-weight: 600; }
       p { margin: 0 0 24px; font-size: 15px; line-height: 1.55; color: var(--muted); }
       .btn {
@@ -112,7 +116,13 @@
       <button id="lang-toggle" class="lang-toggle" type="button"></button>
       <div class="wordmark">tempo</div>
 
-      <div id="success">
+      <div id="idle">
+        <div class="icon idle" aria-hidden="true">&#9993;</div>
+        <h1 data-i18n="idleTitle"></h1>
+        <p data-i18n="idleBody"></p>
+      </div>
+
+      <div id="success" hidden>
         <div class="icon" aria-hidden="true">&#10003;</div>
         <h1 data-i18n="successTitle"></h1>
         <p data-i18n="successBody"></p>
@@ -120,8 +130,8 @@
 
       <div id="error" hidden>
         <div class="icon error" aria-hidden="true">&#33;</div>
-        <h1 data-i18n="errorTitle"></h1>
-        <p data-i18n="errorBody"></p>
+        <h1 id="error-title" data-i18n="errorTitle"></h1>
+        <p id="error-body" data-i18n="errorBody"></p>
       </div>
     </main>
 
@@ -130,19 +140,27 @@
         var STRINGS = {
           fr: {
             lang: "fr",
-            title: "Adresse e-mail confirmée — Tempo!!!",
+            title: "Confirmation e-mail — Tempo",
+            idleTitle: "Rien à confirmer ici",
+            idleBody: "Ouvrez le lien de confirmation reçu par e-mail pour activer votre compte ou valider votre nouvelle adresse.",
             successTitle: "Adresse e-mail confirmée",
             successBody: "Votre compte Tempo est activé. Vous pouvez retourner dans l'application et vous connecter.",
             errorTitle: "Lien invalide ou expiré",
             errorBody: "Ce lien de confirmation n'est plus valable. Ouvrez l'application et demandez un nouvel e-mail de confirmation.",
+            serverErrorTitle: "La confirmation a échoué",
+            serverErrorBody: "Une erreur serveur nous a empêchés de confirmer votre adresse e-mail. Réessayez dans quelques minutes en rouvrant le lien. Si le problème persiste, contactez le support.",
           },
           en: {
             lang: "en",
-            title: "Email confirmed — Tempo",
+            title: "Email confirmation — Tempo",
+            idleTitle: "Nothing to confirm here",
+            idleBody: "Open the confirmation link from your email to activate your account or confirm your new address.",
             successTitle: "Email confirmed",
             successBody: "Your Tempo account is active. You can go back to the app and sign in.",
             errorTitle: "Invalid or expired link",
             errorBody: "This confirmation link is no longer valid. Open the app and request a new confirmation email.",
+            serverErrorTitle: "Confirmation failed",
+            serverErrorBody: "A server error stopped us from confirming your email. Try again in a few minutes by reopening the link. If it keeps happening, contact support.",
           },
         };
 
@@ -167,19 +185,42 @@
           applyLang(current === "fr" ? "en" : "fr");
         });
 
-        var pref = (navigator.language || "fr").toLowerCase();
-        applyLang(pref.indexOf("fr") === 0 ? "fr" : "en");
-
         var params = new URLSearchParams(
           window.location.hash.replace(/^#/, "") + "&" + window.location.search.replace(/^\?/, "")
         );
+
         console.log("URL params:", Object.fromEntries(params.entries()));
-        if (params.get("error") || params.get("error_code")) {
-          document.getElementById("success").hidden = true;
+
+        // Three outcomes: the provider handed back a session (confirmed), an
+        // error, or nothing at all (page opened directly / reloaded after the
+        // URL was stripped). Decide before the first render so a language
+        // toggle keeps whichever copy is showing.
+        var errorName = params.get("error");
+        var errorCode = params.get("error_code");
+        var confirmed = params.get("access_token") || params.get("code");
+
+        if (errorName || errorCode) {
+          var serverSide = errorName === "server_error" || errorCode === "unexpected_failure";
+          document.getElementById("error-title").setAttribute(
+            "data-i18n",
+            serverSide ? "serverErrorTitle" : "errorTitle"
+          );
+          document.getElementById("error-body").setAttribute(
+            "data-i18n",
+            serverSide ? "serverErrorBody" : "errorBody"
+          );
+          document.getElementById("idle").hidden = true;
           document.getElementById("error").hidden = false;
+        } else if (confirmed) {
+          document.getElementById("idle").hidden = true;
+          document.getElementById("success").hidden = false;
         }
 
-        // Strip tokens from the URL so they aren't left in history / shoulder-surfed.
+        var pref = (navigator.language || "fr").toLowerCase();
+        applyLang(pref.indexOf("fr") === 0 ? "fr" : "en");
+
+        // Strip tokens / error details from the URL so they aren't left in
+        // history or shoulder-surfed.
         if (window.history.replaceState) {
           window.history.replaceState(null, "", window.location.pathname);
         }
